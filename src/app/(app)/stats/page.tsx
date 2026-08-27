@@ -12,6 +12,10 @@ function formatDate(d: Date) {
   }).format(d);
 }
 
+function formatValue(value: number) {
+  return String(value);
+}
+
 function computeMinMax(measurements: Measurement[], key: (typeof METRICS)[number]["key"]) {
   let min: { value: number; fecha: Date } | null = null;
   let max: { value: number; fecha: Date } | null = null;
@@ -28,6 +32,26 @@ function computeMinMax(measurements: Measurement[], key: (typeof METRICS)[number
   return { min, max };
 }
 
+function StatSide({
+  label,
+  value,
+  fecha,
+}: {
+  label: string;
+  value: number | null;
+  fecha: Date | null;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-xs text-neutral-500">{label}</p>
+      <p className="mt-0.5 text-lg font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
+        {value !== null ? formatValue(value) : "—"}
+      </p>
+      <p className="truncate text-xs text-neutral-500">{fecha ? formatDate(fecha) : "—"}</p>
+    </div>
+  );
+}
+
 export default async function StatsPage() {
   const measurements = await getAllMeasurements();
 
@@ -36,42 +60,33 @@ export default async function StatsPage() {
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-neutral-200 dark:border-neutral-800">
-      <table className="w-full min-w-[600px] text-left text-sm">
-        <thead className="bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
-          <tr>
-            <th className="px-3 py-2 font-medium">Métrica</th>
-            <th className="px-3 py-2 font-medium">Mínimo</th>
-            <th className="px-3 py-2 font-medium">Fecha mínimo</th>
-            <th className="px-3 py-2 font-medium">Máximo</th>
-            <th className="px-3 py-2 font-medium">Fecha máximo</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
-          {METRICS.map((m) => {
-            const { min, max } = computeMinMax(measurements, m.key);
-            return (
-              <tr key={m.key}>
-                <td className="px-3 py-2 font-medium text-neutral-700 dark:text-neutral-300">
-                  {m.label} {m.unit && <span className="text-neutral-400">({m.unit})</span>}
-                </td>
-                <td className="px-3 py-2 text-neutral-700 dark:text-neutral-300">
-                  {min ? min.value : "—"}
-                </td>
-                <td className="px-3 py-2 whitespace-nowrap text-neutral-500">
-                  {min ? formatDate(min.fecha) : "—"}
-                </td>
-                <td className="px-3 py-2 text-neutral-700 dark:text-neutral-300">
-                  {max ? max.value : "—"}
-                </td>
-                <td className="px-3 py-2 whitespace-nowrap text-neutral-500">
-                  {max ? formatDate(max.fecha) : "—"}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {METRICS.map((m) => {
+        const { min, max } = computeMinMax(measurements, m.key);
+        return (
+          <li
+            key={m.key}
+            className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+          >
+            <h2 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+              {m.label}
+              {m.unit ? <span className="ml-1 font-normal text-neutral-400">({m.unit})</span> : null}
+            </h2>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <StatSide
+                label="Mínimo"
+                value={min ? min.value : null}
+                fecha={min ? min.fecha : null}
+              />
+              <StatSide
+                label="Máximo"
+                value={max ? max.value : null}
+                fecha={max ? max.fecha : null}
+              />
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
