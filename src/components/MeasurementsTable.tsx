@@ -2,7 +2,13 @@
 
 import { useTransition } from "react";
 import { deleteMeasurement } from "@/app/actions";
-import { METRICS } from "@/lib/metrics";
+import { clsx } from "@/lib/clsx";
+import {
+  METRICS,
+  extremeKind,
+  formatMetricValue,
+  type MetricExtremes,
+} from "@/lib/metrics";
 import type { Measurement } from "@/db/schema";
 
 function formatDate(d: Date) {
@@ -15,7 +21,13 @@ function formatDate(d: Date) {
   }).format(d);
 }
 
-export default function MeasurementsTable({ measurements }: { measurements: Measurement[] }) {
+export default function MeasurementsTable({
+  measurements,
+  extremes,
+}: {
+  measurements: Measurement[];
+  extremes?: MetricExtremes;
+}) {
   const [isPending, startTransition] = useTransition();
 
   if (measurements.length === 0) {
@@ -42,11 +54,24 @@ export default function MeasurementsTable({ measurements }: { measurements: Meas
               <td className="whitespace-nowrap px-3 py-2 text-neutral-700 dark:text-neutral-300">
                 {formatDate(new Date(row.fecha))}
               </td>
-              {METRICS.map((m) => (
-                <td key={m.key} className="px-3 py-2 text-neutral-700 dark:text-neutral-300">
-                  {row[m.key] ?? "—"}
-                </td>
-              ))}
+              {METRICS.map((m) => {
+                const kind = extremeKind(row[m.key], extremes?.[m.key]);
+                return (
+                  <td
+                    key={m.key}
+                    className={clsx(
+                      "px-3 py-2 tabular-nums",
+                      kind === "min" &&
+                        "bg-teal-50 font-medium text-teal-800 dark:bg-teal-950/70 dark:text-teal-200",
+                      kind === "max" &&
+                        "bg-orange-50 font-medium text-orange-800 dark:bg-orange-950/70 dark:text-orange-200",
+                      !kind && "text-neutral-700 dark:text-neutral-300"
+                    )}
+                  >
+                    {formatMetricValue(row[m.key]) ?? "—"}
+                  </td>
+                );
+              })}
               <td className="px-3 py-2">
                 <button
                   disabled={isPending}

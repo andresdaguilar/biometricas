@@ -47,6 +47,7 @@ export async function addMeasurement(
   });
 
   revalidatePath("/registro");
+  revalidatePath("/registros");
   revalidatePath("/graficos");
   revalidatePath("/stats");
 
@@ -57,6 +58,7 @@ export async function deleteMeasurement(id: number) {
   const { eq } = await import("drizzle-orm");
   await getDb().delete(measurements).where(eq(measurements.id, id));
   revalidatePath("/registro");
+  revalidatePath("/registros");
   revalidatePath("/graficos");
   revalidatePath("/stats");
 }
