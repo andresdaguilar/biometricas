@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { addMeasurement, MeasurementFormState } from "@/app/actions";
-import { METRICS } from "@/lib/metrics";
+import { METRICS, type MetricKey } from "@/lib/metrics";
 
 const initialState: MeasurementFormState = { ok: false };
 
@@ -12,7 +12,11 @@ function nowLocalDatetime() {
   return new Date(now.getTime() - tzOffsetMs).toISOString().slice(0, 16);
 }
 
-export default function MeasurementForm() {
+export default function MeasurementForm({
+  lastValues = {},
+}: {
+  lastValues?: Partial<Record<MetricKey, string>>;
+}) {
   const [state, formAction, pending] = useActionState(addMeasurement, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -59,7 +63,8 @@ export default function MeasurementForm() {
               type="number"
               step="0.01"
               inputMode="decimal"
-              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-800"
+              placeholder={lastValues[m.key]}
+              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none placeholder:text-neutral-400 focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:placeholder:text-neutral-500"
             />
           </div>
         ))}

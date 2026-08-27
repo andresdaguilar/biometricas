@@ -3,14 +3,24 @@ import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth";
 
 const PUBLIC_PATHS = ["/login"];
 
+function isPublicPath(pathname: string) {
+  return (
+    PUBLIC_PATHS.includes(pathname) ||
+    pathname.startsWith("/_next") ||
+    pathname === "/favicon.ico" ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/icon" ||
+    pathname === "/icon.svg" ||
+    pathname.startsWith("/apple-icon") ||
+    pathname === "/apple-touch-icon.png" ||
+    pathname.startsWith("/icons/")
+  );
+}
+
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (
-    PUBLIC_PATHS.some((p) => pathname === p) ||
-    pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico"
-  ) {
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
@@ -28,5 +38,7 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/|apple-touch-icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+  ],
 };

@@ -8,6 +8,9 @@ export type LoginState = {
 };
 
 export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
+  const { connection } = await import("next/server");
+  await connection();
+
   const username = String(formData.get("username") ?? "");
   const password = String(formData.get("password") ?? "");
 

@@ -6,19 +6,33 @@ export const SESSION_COOKIE = "session";
 // 10 años: efectivamente "no expira" para un usuario que revisita la app a diario.
 const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 365 * 10;
 
+/** Vercel/UI often paste .env.local literally: quotes and `\$` escapes. */
+function readEnv(name: string): string | undefined {
+  const raw = process.env[name];
+  if (raw === undefined) return undefined;
+  let value = raw.trim();
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    value = value.slice(1, -1);
+  }
+  return value.replaceAll("\\$", "$");
+}
+
 function getSecret() {
-  const secret = process.env.AUTH_SECRET;
+  const secret = readEnv("AUTH_SECRET");
   if (!secret) throw new Error("AUTH_SECRET no está definida");
   return new TextEncoder().encode(secret);
 }
 
 export async function verifyCredentials(username: string, password: string) {
-  const expectedUser = process.env.AUTH_USERNAME;
-  const expectedHash = process.env.AUTH_PASSWORD_HASH;
+  const expectedUser = readEnv("AUTH_USERNAME");
+  const expectedHash = readEnv("AUTH_PASSWORD_HASH");
   if (!expectedUser || !expectedHash) {
     throw new Error("AUTH_USERNAME o AUTH_PASSWORD_HASH no están definidas");
   }
-  if (username !== expectedUser) return false;
+  if (username.trim() !== expectedUser) return false;
   return bcrypt.compare(password, expectedHash);
 }
 

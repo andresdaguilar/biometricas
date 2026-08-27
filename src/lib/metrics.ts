@@ -11,3 +11,21 @@ export const METRICS = [
 ] as const;
 
 export type MetricKey = (typeof METRICS)[number]["key"];
+
+function formatMetricValue(value: string | number | null | undefined): string | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  const n = Number(value);
+  return Number.isNaN(n) ? String(value) : String(n);
+}
+
+export function lastRecordedValues(
+  rows: Array<Partial<Record<MetricKey, string | number | null>>>
+): Partial<Record<MetricKey, string>> {
+  const last: Partial<Record<MetricKey, string>> = {};
+  for (const metric of METRICS) {
+    const row = rows.find((r) => r[metric.key] != null && r[metric.key] !== "");
+    const formatted = formatMetricValue(row?.[metric.key]);
+    if (formatted !== undefined) last[metric.key] = formatted;
+  }
+  return last;
+}
