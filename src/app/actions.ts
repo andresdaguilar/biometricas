@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { connection } from "next/server";
 import { z } from "zod";
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { measurements } from "@/db/schema";
 
 const numericField = z
@@ -40,7 +41,7 @@ export async function addMeasurement(
 
   const { fecha, ...rest } = parsed.data;
 
-  await db.insert(measurements).values({
+  await getDb().insert(measurements).values({
     fecha: new Date(fecha),
     ...rest,
   });
@@ -54,13 +55,14 @@ export async function addMeasurement(
 
 export async function deleteMeasurement(id: number) {
   const { eq } = await import("drizzle-orm");
-  await db.delete(measurements).where(eq(measurements.id, id));
+  await getDb().delete(measurements).where(eq(measurements.id, id));
   revalidatePath("/registro");
   revalidatePath("/graficos");
   revalidatePath("/stats");
 }
 
 export async function getAllMeasurements() {
+  await connection();
   const { desc } = await import("drizzle-orm");
-  return db.select().from(measurements).orderBy(desc(measurements.fecha));
+  return getDb().select().from(measurements).orderBy(desc(measurements.fecha));
 }

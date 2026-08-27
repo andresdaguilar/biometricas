@@ -2,9 +2,21 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL no está definida");
+function createDb() {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL no está definida");
+  }
+  return drizzle(neon(url), { schema });
 }
 
-const sql = neon(process.env.DATABASE_URL);
-export const db = drizzle(sql, { schema });
+type Database = ReturnType<typeof createDb>;
+
+let instance: Database | undefined;
+
+export function getDb(): Database {
+  if (!instance) {
+    instance = createDb();
+  }
+  return instance;
+}
